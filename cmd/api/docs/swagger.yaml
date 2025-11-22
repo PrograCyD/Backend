@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: API para PC4 (item-based, Mongo, Redis)
+  title: NodosML Movie Recommender API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

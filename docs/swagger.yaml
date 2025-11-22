@@ -1,0 +1,407 @@
+basePath: /
+definitions:
+  handler.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handler.ratingRequest:
+    properties:
+      movieId:
+        type: integer
+      rating:
+        type: number
+    type: object
+  handler.registerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+  handler.updateUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+  models.CastMember:
+    properties:
+      name:
+        type: string
+      profileUrl:
+        type: string
+    type: object
+  models.ExternalData:
+    properties:
+      budget:
+        type: integer
+      cast:
+        items:
+          $ref: '#/definitions/models.CastMember'
+        type: array
+      director:
+        type: string
+      overview:
+        type: string
+      posterUrl:
+        type: string
+      revenue:
+        type: integer
+      runtime:
+        type: integer
+      tmdbFetched:
+        type: boolean
+    type: object
+  models.GenomeTag:
+    properties:
+      relevance:
+        type: number
+      tag:
+        type: string
+    type: object
+  models.Links:
+    properties:
+      imdb:
+        type: string
+      movielens:
+        type: string
+      tmdb:
+        type: string
+    type: object
+  models.MovieDoc:
+    properties:
+      createdAt:
+        type: string
+      externalData:
+        $ref: '#/definitions/models.ExternalData'
+      genomeTags:
+        items:
+          $ref: '#/definitions/models.GenomeTag'
+        type: array
+      genres:
+        items:
+          type: string
+        type: array
+      iIdx:
+        type: integer
+      links:
+        $ref: '#/definitions/models.Links'
+      movieId:
+        type: integer
+      ratingStats:
+        $ref: '#/definitions/models.RatingStats'
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userTags:
+        items:
+          type: string
+        type: array
+      year:
+        type: integer
+    type: object
+  models.RatingStats:
+    properties:
+      average:
+        type: number
+      count:
+        type: integer
+      lastRatedAt:
+        type: string
+    type: object
+  models.RecItem:
+    properties:
+      movieId:
+        type: integer
+      score:
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API para PC4 (item-based, Mongo, Redis)
+  title: NodosML Movie Recommender API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: credenciales
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Crea un usuario nuevo
+      parameters:
+      - description: datos
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register
+      tags:
+      - auth
+  /health:
+    get:
+      responses:
+        "200":
+          description: OK
+      summary: Healthcheck
+      tags:
+      - health
+  /movies/{id}:
+    get:
+      parameters:
+      - description: movieId
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieDoc'
+      summary: Get movie
+      tags:
+      - movies
+  /movies/search:
+    get:
+      parameters:
+      - description: búsqueda por título
+        in: query
+        name: q
+        type: string
+      - description: filtrar por género
+        in: query
+        name: genre
+        type: string
+      - description: año desde
+        in: query
+        name: year_from
+        type: integer
+      - description: año hasta
+        in: query
+        name: year_to
+        type: integer
+      - description: límite
+        in: query
+        name: limit
+        type: integer
+      - description: offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MovieDoc'
+            type: array
+      summary: Buscar / listar películas (paginado)
+      tags:
+      - movies
+  /movies/top:
+    get:
+      parameters:
+      - description: 'popular|rating (default: popular)'
+        in: query
+        name: metric
+        type: string
+      - description: 'límite (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MovieDoc'
+            type: array
+      summary: Top películas (popularidad o rating)
+      tags:
+      - movies
+  /users/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un usuario existente (email, role, password).
+        Todos los campos son opcionales.
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar usuario
+      tags:
+      - auth
+  /users/{id}/ratings:
+    get:
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: Listar ratings del usuario
+      tags:
+      - ratings
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: rating
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ratingRequest'
+      responses:
+        "204":
+          description: No Content
+      summary: Crear/actualizar rating
+      tags:
+      - ratings
+  /users/{id}/recommendations:
+    get:
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: cantidad de recomendaciones (máx 50)
+        in: query
+        name: k
+        type: integer
+      - description: si true, ignora cache Redis
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RecItem'
+            type: array
+      summary: Recomendaciones para un usuario
+      tags:
+      - recommend
+  /users/{id}/ws/recommendations:
+    get:
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: cantidad de recomendaciones (máx 50)
+        in: query
+        name: k
+        type: integer
+      - description: si true, ignora cache Redis
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Recomendaciones en tiempo real (WebSocket)
+      tags:
+      - recommend
+swagger: "2.0"

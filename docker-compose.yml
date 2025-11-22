@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: pc4-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - pc4-net
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: pc4-mongo-express
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+    networks:
+      - pc4-net
+
+  redis:
+    image: redis:7
+    container_name: pc4-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - pc4-net
+
+  api:
+    build:
+      context: .
+      dockerfile: ./cmd/api/Dockerfile
+    container_name: pc4-api
+    depends_on:
+      - mongo
+      - redis
+      - mlnode1
+      - mlnode2
+      - mlnode3
+      - mlnode4
+    environment:
+      MONGO_URI: mongodb://root:example@mongo:27017
+      MONGO_DB: pc4_movies
+      REDIS_ADDR: redis:6379
+      JWT_SECRET: supersecret_jwt_para_pc4
+      HTTP_PORT: "8080"
+      ML_NODE_ADDRS: "mlnode1:9001,mlnode2:9001,mlnode3:9001,mlnode4:9001"
+    ports:
+      - "8080:8080"
+    networks:
+      - pc4-net
+
+  mlnode1:
+    build:
+      context: .
+      dockerfile: ./cmd/mlnode/Dockerfile
+    container_name: pc4-mlnode1
+    environment:
+      ML_NODE_ADDR: ":9001"
+      NODE_ID: "1"
+      MONGO_URI: mongodb://root:example@mongo:27017
+      MONGO_DB: pc4_movies
+    networks:
+      - pc4-net
+
+  mlnode2:
+    build:
+      context: .
+      dockerfile: ./cmd/mlnode/Dockerfile
+    container_name: pc4-mlnode2
+    environment:
+      ML_NODE_ADDR: ":9001"
+      NODE_ID: "2"
+      MONGO_URI: mongodb://root:example@mongo:27017
+      MONGO_DB: pc4_movies
+    networks:
+      - pc4-net
+
+  mlnode3:
+    build:
+      context: .
+      dockerfile: ./cmd/mlnode/Dockerfile
+    container_name: pc4-mlnode3
+    environment:
+      ML_NODE_ADDR: ":9001"
+      NODE_ID: "3"
+      MONGO_URI: mongodb://root:example@mongo:27017
+      MONGO_DB: pc4_movies
+    networks:
+      - pc4-net
+
+  mlnode4:
+    build:
+      context: .
+      dockerfile: ./cmd/mlnode/Dockerfile
+    container_name: pc4-mlnode4
+    environment:
+      ML_NODE_ADDR: ":9001"
+      NODE_ID: "4"
+      MONGO_URI: mongodb://root:example@mongo:27017
+      MONGO_DB: pc4_movies
+    networks:
+      - pc4-net
+
+networks:
+  pc4-net:
+
+volumes:
+  mongo_data:
+  redis_data:

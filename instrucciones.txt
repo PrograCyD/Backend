@@ -1,0 +1,65 @@
+0. Inicializar proyecto
+Conectarse desde Mongo Compass
+mongodb://root:example@localhost:27017
+Subir las colecciones a la bd pc4_movies
+- movies
+- ratings
+- users
+- similarities
+
+go mod download
+go mod tidy
+go install github.com/swaggo/swag/cmd/swag@latest
+
+swag init -g cmd/api/main.go -o ./docs
+Swagger: http://localhost:8080/swagger/index.html
+
+1. Levantar
+docker compose down 			#-v elimina la bd
+docker compose up -d --build		#docker compose up -d
+docker ps
+
+Abrir 4 terminales (o usar 4 pestañas):
+2. Logs por terminal
+docker logs pc4-mlnode1 -f
+docker logs pc4-mlnode2 -f
+docker logs pc4-mlnode3 -f
+docker logs pc4-mlnode4 -f
+
+
+
+3. Comprobar que están escuchando por TCP desde dentro del contenedor API
+Entra al contenedor de la API:
+docker exec -it pc4-api sh
+nc -vz mlnode1 9001
+nc -vz mlnode2 9001
+nc -vz mlnode3 9001
+nc -vz mlnode4 9001
+Si dice “open”, el TCP está activo y el nodo responde.
+
+
+4. Comprobar tráfico REAL: llamar a /recommendations
+GET http://localhost:8080/users/1/recommendations
+Los logs de los nodos deberían mostrar:
+[ML NODE 2] tarea recibida: user=1 shard=1/4 ratings=120
+
+
+5. Ver Redis
+docker exec -it pc4-redis sh
+redis-cli
+KEYS *   #ejm si se obtiene rec:user:1
+# FLUSHALL para limpiar
+TYPE rec:user:1      # debe decir "string"
+TTL rec:user:1       # ver cuántos segundos le quedan de vida
+GET rec:user:1       # ver el contenido crudo
+
+
+6. Probar WebSocket
+npm install -g wscat		#si no se tiene instalado
+wscat -c ws://localhost:8080/users/1/ws/recommendations?k=20
+
+
+Swagger: http://localhost:8080/swagger/index.html
+
+go get github.com/gorilla/websocket
+go install github.com/swaggo/swag/cmd/swag@latest
