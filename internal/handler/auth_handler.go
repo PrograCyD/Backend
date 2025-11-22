@@ -98,7 +98,7 @@ type updateUserRequest struct {
 // @Success 200 {object} map[string]any
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /users/{id} [put]
+// @Router /users/{id}/update [put]
 func (h *AuthHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))

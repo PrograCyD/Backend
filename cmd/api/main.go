@@ -84,6 +84,7 @@ func main() {
 
 	r.Post("/auth/register", authH.Register)
 	r.Post("/auth/login", authH.Login)
+	r.Put("/users/{id}/update", authH.UpdateUser)
 
 	// películas
 	r.Get("/movies/{id}", movieH.GetMovie)
@@ -92,7 +93,7 @@ func main() {
 	// rutas de usuarios
 	r.Route("/users", func(r chi.Router) {
 		// PUT /users/{id} -> actualizar usuario
-		r.Put("/{id}", authH.UpdateUser)
+		// r.Put("/{id}", authH.UpdateUser)
 
 		// rutas que dependen de userId
 		r.Route("/{id}", func(r chi.Router) {

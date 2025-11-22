@@ -273,47 +273,6 @@ paths:
       summary: Top películas (popularidad o rating)
       tags:
       - movies
-  /users/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Actualiza los datos de un usuario existente (email, role, password).
-        Todos los campos son opcionales.
-      parameters:
-      - description: userId
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: datos a actualizar
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.updateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Actualizar usuario
-      tags:
-      - auth
   /users/{id}/ratings:
     get:
       parameters:
@@ -377,6 +336,47 @@ paths:
       summary: Recomendaciones para un usuario
       tags:
       - recommend
+  /users/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un usuario existente (email, role, password).
+        Todos los campos son opcionales.
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: datos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar usuario
+      tags:
+      - auth
   /users/{id}/ws/recommendations:
     get:
       parameters:
