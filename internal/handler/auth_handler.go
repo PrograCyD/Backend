@@ -20,7 +20,6 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 type registerRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Name     string `json:"name"`
 	Role     string `json:"role"`
 }
 

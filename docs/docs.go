@@ -106,6 +106,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/me/ratings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ratings"
+                ],
+                "summary": "Listar MIS ratings",
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ratings"
+                ],
+                "summary": "Crear/actualizar mis ratings",
+                "parameters": [
+                    {
+                        "description": "rating",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.ratingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/me/recommendations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recommend"
+                ],
+                "summary": "Mis recomendaciones",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "cantidad de recomendaciones (máx 50)",
+                        "name": "k",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "si true, ignora cache Redis",
+                        "name": "refresh",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RecItem"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/movies/search": {
             "get": {
                 "produces": [
@@ -238,7 +326,7 @@ const docTemplate = `{
                 "tags": [
                     "ratings"
                 ],
-                "summary": "Listar ratings del usuario",
+                "summary": "Listar ratings de un usuario (ADMIN)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -257,7 +345,7 @@ const docTemplate = `{
                 "tags": [
                     "ratings"
                 ],
-                "summary": "Crear/actualizar rating",
+                "summary": "Crear/actualizar rating (ADMIN)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -291,7 +379,7 @@ const docTemplate = `{
                 "tags": [
                     "recommend"
                 ],
-                "summary": "Recomendaciones para un usuario",
+                "summary": "Recomendaciones para un usuario (ADMIN)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -394,7 +482,7 @@ const docTemplate = `{
                 "tags": [
                     "recommend"
                 ],
-                "summary": "Recomendaciones en tiempo real (WebSocket)",
+                "summary": "Recomendaciones en tiempo real (WebSocket, ADMIN)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -455,9 +543,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "password": {
@@ -624,6 +709,13 @@ const docTemplate = `{
                     "type": "number"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

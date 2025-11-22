@@ -18,8 +18,6 @@ definitions:
     properties:
       email:
         type: string
-      name:
-        type: string
       password:
         type: string
       role:
@@ -193,6 +191,59 @@ paths:
       summary: Healthcheck
       tags:
       - health
+  /me/ratings:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Listar MIS ratings
+      tags:
+      - ratings
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: rating
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ratingRequest'
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Crear/actualizar mis ratings
+      tags:
+      - ratings
+  /me/recommendations:
+    get:
+      parameters:
+      - description: cantidad de recomendaciones (máx 50)
+        in: query
+        name: k
+        type: integer
+      - description: si true, ignora cache Redis
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RecItem'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Mis recomendaciones
+      tags:
+      - recommend
   /movies/{id}:
     get:
       parameters:
@@ -284,7 +335,7 @@ paths:
       produces:
       - application/json
       responses: {}
-      summary: Listar ratings del usuario
+      summary: Listar ratings de un usuario (ADMIN)
       tags:
       - ratings
     post:
@@ -305,7 +356,7 @@ paths:
       responses:
         "204":
           description: No Content
-      summary: Crear/actualizar rating
+      summary: Crear/actualizar rating (ADMIN)
       tags:
       - ratings
   /users/{id}/recommendations:
@@ -333,7 +384,7 @@ paths:
             items:
               $ref: '#/definitions/models.RecItem'
             type: array
-      summary: Recomendaciones para un usuario
+      summary: Recomendaciones para un usuario (ADMIN)
       tags:
       - recommend
   /users/{id}/update:
@@ -401,7 +452,12 @@ paths:
           schema:
             additionalProperties: true
             type: object
-      summary: Recomendaciones en tiempo real (WebSocket)
+      summary: Recomendaciones en tiempo real (WebSocket, ADMIN)
       tags:
       - recommend
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

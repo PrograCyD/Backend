@@ -25,6 +25,9 @@ import (
 // @description API para PC4 (item-based, Mongo, Redis)
 // @host localhost:8080
 // @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.Load()
 
@@ -79,32 +82,51 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// rutas públicas
+	// =============
+	// Rutas públicas
+	// =============
 	r.Get("/health", handler.Health)
 
 	r.Post("/auth/register", authH.Register)
 	r.Post("/auth/login", authH.Login)
-	r.Put("/users/{id}/update", authH.UpdateUser)
 
-	// películas
+	// Películas (públicas)
 	r.Get("/movies/{id}", movieH.GetMovie)
 	r.Get("/movies/search", movieH.Search)
 
-	// rutas de usuarios
-	r.Route("/users", func(r chi.Router) {
-		// PUT /users/{id} -> actualizar usuario
-		// r.Put("/{id}", authH.UpdateUser)
+	// ===========================
+	// Rutas protegidas con JWT
+	// ===========================
+	authMw := handler.JWTAuth(cfg.JWTSecret)
 
-		// rutas que dependen de userId
-		r.Route("/{id}", func(r chi.Router) {
-			r.Get("/ratings", ratingH.GetRatings)
-			r.Post("/ratings", ratingH.PostRating)
+	r.Group(func(r chi.Router) {
+		r.Use(authMw)
 
-			// HTTP normal
-			r.Get("/recommendations", recH.GetRecommendations)
+		// ---- Endpoints /me (USER normal) ----
+		r.Route("/me", func(r chi.Router) {
+			r.Get("/ratings", ratingH.GetMyRatings)
+			r.Post("/ratings", ratingH.PostMyRating)
+			r.Get("/recommendations", recH.GetMyRecommendations)
+		})
 
-			// WebSocket
-			r.Get("/ws/recommendations", recH.GetRecommendationsWS)
+		// ---- Endpoints solo ADMIN ----
+		r.Group(func(r chi.Router) {
+			r.Use(handler.AdminOnly())
+
+			// edición de usuario
+			r.Put("/users/{id}/update", authH.UpdateUser)
+
+			// ratings y recomendaciones de cualquier usuario
+			r.Route("/users/{id}", func(r chi.Router) {
+				r.Get("/ratings", ratingH.GetRatings)
+				r.Post("/ratings", ratingH.PostRating)
+
+				// HTTP normal
+				r.Get("/recommendations", recH.GetRecommendations)
+
+				// WebSocket
+				r.Get("/ws/recommendations", recH.GetRecommendationsWS)
+			})
 		})
 	})
 

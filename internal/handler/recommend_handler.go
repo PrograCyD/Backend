@@ -21,7 +21,11 @@ func NewRecommendHandler(s *service.RecommendService) *RecommendHandler {
 	return &RecommendHandler{svc: s}
 }
 
-// @Summary Recomendaciones para un usuario
+// =====================
+// Endpoints para ADMIN
+// =====================
+
+// @Summary Recomendaciones para un usuario (ADMIN)
 // @Tags recommend
 // @Produce json
 // @Param id path int true "userId"
@@ -53,7 +57,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-// @Summary Recomendaciones en tiempo real (WebSocket)
+// @Summary Recomendaciones en tiempo real (WebSocket, ADMIN)
 // @Tags recommend
 // @Produce json
 // @Param id path int true "userId"
@@ -112,4 +116,40 @@ func (h *RecommendHandler) GetRecommendationsWS(w http.ResponseWriter, r *http.R
 		"items":       items,
 		"generatedAt": time.Now(),
 	})
+}
+
+// =====================
+// Endpoint para USER
+// =====================
+
+// @Summary Mis recomendaciones
+// @Tags recommend
+// @Security BearerAuth
+// @Produce json
+// @Param k query int false "cantidad de recomendaciones (máx 50)"
+// @Param refresh query bool false "si true, ignora cache Redis"
+// @Success 200 {array} models.RecItem
+// @Router /me/recommendations [get]
+func (h *RecommendHandler) GetMyRecommendations(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID := UserIDFromContext(r.Context())
+	if userID == 0 {
+		http.Error(w, "no user in context", http.StatusUnauthorized)
+		return
+	}
+
+	k, _ := strconv.Atoi(r.URL.Query().Get("k"))
+	refresh := r.URL.Query().Get("refresh") == "true"
+
+	items, err := h.svc.Recommend(r.Context(), service.RecRequest{
+		UserID:  userID,
+		K:       k,
+		Refresh: refresh,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(items)
 }
