@@ -27,6 +27,7 @@ type ratingRequest struct {
 
 // @Summary Crear/actualizar rating (ADMIN)
 // @Tags ratings
+// @Security BearerAuth
 // @Accept json
 // @Param id path int true "userId"
 // @Param body body ratingRequest true "rating"
@@ -49,6 +50,7 @@ func (h *RatingHandler) PostRating(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Listar ratings de un usuario (ADMIN)
 // @Tags ratings
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "userId"
 // @Router /users/{id}/ratings [get]

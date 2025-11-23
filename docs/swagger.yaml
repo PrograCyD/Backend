@@ -335,6 +335,8 @@ paths:
       produces:
       - application/json
       responses: {}
+      security:
+      - BearerAuth: []
       summary: Listar ratings de un usuario (ADMIN)
       tags:
       - ratings
@@ -356,6 +358,8 @@ paths:
       responses:
         "204":
           description: No Content
+      security:
+      - BearerAuth: []
       summary: Crear/actualizar rating (ADMIN)
       tags:
       - ratings
@@ -384,6 +388,8 @@ paths:
             items:
               $ref: '#/definitions/models.RecItem'
             type: array
+      security:
+      - BearerAuth: []
       summary: Recomendaciones para un usuario (ADMIN)
       tags:
       - recommend
@@ -425,6 +431,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Actualizar usuario
       tags:
       - auth
@@ -452,6 +460,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Recomendaciones en tiempo real (WebSocket, ADMIN)
       tags:
       - recommend

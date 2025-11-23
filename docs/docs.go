@@ -320,6 +320,11 @@ const docTemplate = `{
         },
         "/users/{id}/ratings": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -339,6 +344,11 @@ const docTemplate = `{
                 "responses": {}
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -373,6 +383,11 @@ const docTemplate = `{
         },
         "/users/{id}/recommendations": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -416,6 +431,11 @@ const docTemplate = `{
         },
         "/users/{id}/update": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Actualiza los datos de un usuario existente (email, role, password). Todos los campos son opcionales.",
                 "consumes": [
                     "application/json"
@@ -476,6 +496,11 @@ const docTemplate = `{
         },
         "/users/{id}/ws/recommendations": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],

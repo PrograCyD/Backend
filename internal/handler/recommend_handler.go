@@ -27,6 +27,7 @@ func NewRecommendHandler(s *service.RecommendService) *RecommendHandler {
 
 // @Summary Recomendaciones para un usuario (ADMIN)
 // @Tags recommend
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "userId"
 // @Param k query int false "cantidad de recomendaciones (máx 50)"
@@ -59,6 +60,7 @@ var upgrader = websocket.Upgrader{
 
 // @Summary Recomendaciones en tiempo real (WebSocket, ADMIN)
 // @Tags recommend
+// @Security BearerAuth
 // @Produce json
 // @Param id path int true "userId"
 // @Param k query int false "cantidad de recomendaciones (máx 50)"

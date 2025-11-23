@@ -314,6 +314,11 @@
         },
         "/users/{id}/ratings": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -333,6 +338,11 @@
                 "responses": {}
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -367,6 +377,11 @@
         },
         "/users/{id}/recommendations": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -410,6 +425,11 @@
         },
         "/users/{id}/update": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Actualiza los datos de un usuario existente (email, role, password). Todos los campos son opcionales.",
                 "consumes": [
                     "application/json"
@@ -470,6 +490,11 @@
         },
         "/users/{id}/ws/recommendations": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],

@@ -90,6 +90,7 @@ type updateUserRequest struct {
 // @Summary Actualizar usuario
 // @Description Actualiza los datos de un usuario existente (email, role, password). Todos los campos son opcionales.
 // @Tags auth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path int true "userId"
