@@ -32,6 +32,34 @@ definitions:
       role:
         type: string
     type: object
+  models.AdminPendingSimilarities:
+    properties:
+      minRatings:
+        type: integer
+      withoutIdx:
+        items:
+          $ref: '#/definitions/models.PendingMovieWithoutIdx'
+        type: array
+      withoutSimilarities:
+        items:
+          $ref: '#/definitions/models.PendingMovieWithoutSims'
+        type: array
+    type: object
+  models.AdminSimilaritySummary:
+    properties:
+      minRatings:
+        type: integer
+      moviesWithIdx:
+        type: integer
+      moviesWithSimilarities:
+        type: integer
+      moviesWithoutIdx:
+        type: integer
+      moviesWithoutSimilarities:
+        type: integer
+      totalMovies:
+        type: integer
+    type: object
   models.CastMember:
     properties:
       name:
@@ -109,6 +137,26 @@ definitions:
       year:
         type: integer
     type: object
+  models.PendingMovieWithoutIdx:
+    properties:
+      movieId:
+        type: integer
+      ratingsCount:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.PendingMovieWithoutSims:
+    properties:
+      iIdx:
+        type: integer
+      movieId:
+        type: integer
+      ratingsCount:
+        type: integer
+      title:
+        type: string
+    type: object
   models.RatingStats:
     properties:
       average:
@@ -118,12 +166,56 @@ definitions:
       lastRatedAt:
         type: string
     type: object
+  models.RebuildSimilaritiesRequest:
+    properties:
+      batchSize:
+        type: integer
+      k:
+        type: integer
+      minCommonUsers:
+        type: integer
+      minRatings:
+        type: integer
+      parallelism:
+        type: integer
+      shrink:
+        type: integer
+    type: object
+  models.RebuildSimilaritiesResult:
+    properties:
+      batches:
+        type: integer
+      k:
+        type: integer
+      minCommonUsers:
+        type: integer
+      processedMovies:
+        type: integer
+      shrink:
+        type: integer
+    type: object
   models.RecItem:
     properties:
       movieId:
         type: integer
       score:
         type: number
+    type: object
+  models.RemapMissingRequest:
+    properties:
+      limit:
+        type: integer
+      minRatings:
+        type: integer
+    type: object
+  models.RemapMissingResult:
+    properties:
+      fromIdx:
+        type: integer
+      mappedCount:
+        type: integer
+      toIdx:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -132,6 +224,130 @@ info:
   title: NodosML Movie Recommender API
   version: "1.0"
 paths:
+  /admin/maintenance/similarities/pending:
+    get:
+      description: Lista películas sin iIdx y películas con iIdx pero sin documento
+        en similarities.
+      parameters:
+      - description: Mínimo de ratings para considerar una película (default 5)
+        in: query
+        name: minRatings
+        type: integer
+      - description: Límite de películas sin iIdx (default 50)
+        in: query
+        name: limitWithoutIdx
+        type: integer
+      - description: Límite de películas sin similitudes (default 50)
+        in: query
+        name: limitWithoutSims
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AdminPendingSimilarities'
+        "500":
+          description: error interno
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Películas pendientes de mapeo/similitudes
+      tags:
+      - admin-maintenance
+  /admin/maintenance/similarities/rebuild:
+    post:
+      consumes:
+      - application/json
+      description: Lanza el recálculo de similitudes en batches contra los nodos ML
+        para películas sin entry en similarities.
+      parameters:
+      - description: Parámetros de reconstrucción
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RebuildSimilaritiesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RebuildSimilaritiesResult'
+        "400":
+          description: body inválido
+          schema:
+            type: string
+        "500":
+          description: error interno
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Recalcular similitudes pendientes
+      tags:
+      - admin-maintenance
+  /admin/maintenance/similarities/remap-missing:
+    post:
+      consumes:
+      - application/json
+      description: Asigna nuevos valores de iIdx a películas que aún no lo tienen
+        y tienen suficientes ratings.
+      parameters:
+      - description: Parámetros de remapeo
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RemapMissingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RemapMissingResult'
+        "400":
+          description: body inválido
+          schema:
+            type: string
+        "500":
+          description: error interno
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Remapear películas sin iIdx
+      tags:
+      - admin-maintenance
+  /admin/maintenance/similarities/summary:
+    get:
+      description: Devuelve conteos de películas con/sin iIdx y con/sin similitudes
+        precalculadas.
+      parameters:
+      - description: Mínimo de ratings para considerar una película (default 5)
+        in: query
+        name: minRatings
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AdminSimilaritySummary'
+        "500":
+          description: error interno
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Resumen de estado de similitudes
+      tags:
+      - admin-maintenance
   /auth/login:
     post:
       consumes:

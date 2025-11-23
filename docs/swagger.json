@@ -9,6 +9,198 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/admin/maintenance/similarities/pending": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista películas sin iIdx y películas con iIdx pero sin documento en similarities.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-maintenance"
+                ],
+                "summary": "Películas pendientes de mapeo/similitudes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mínimo de ratings para considerar una película (default 5)",
+                        "name": "minRatings",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Límite de películas sin iIdx (default 50)",
+                        "name": "limitWithoutIdx",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Límite de películas sin similitudes (default 50)",
+                        "name": "limitWithoutSims",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.AdminPendingSimilarities"
+                        }
+                    },
+                    "500": {
+                        "description": "error interno",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/maintenance/similarities/rebuild": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lanza el recálculo de similitudes en batches contra los nodos ML para películas sin entry en similarities.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-maintenance"
+                ],
+                "summary": "Recalcular similitudes pendientes",
+                "parameters": [
+                    {
+                        "description": "Parámetros de reconstrucción",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RebuildSimilaritiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RebuildSimilaritiesResult"
+                        }
+                    },
+                    "400": {
+                        "description": "body inválido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "error interno",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/maintenance/similarities/remap-missing": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Asigna nuevos valores de iIdx a películas que aún no lo tienen y tienen suficientes ratings.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-maintenance"
+                ],
+                "summary": "Remapear películas sin iIdx",
+                "parameters": [
+                    {
+                        "description": "Parámetros de remapeo",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RemapMissingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RemapMissingResult"
+                        }
+                    },
+                    "400": {
+                        "description": "body inválido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "error interno",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/maintenance/similarities/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve conteos de películas con/sin iIdx y con/sin similitudes precalculadas.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-maintenance"
+                ],
+                "summary": "Resumen de estado de similitudes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mínimo de ratings para considerar una película (default 5)",
+                        "name": "minRatings",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.AdminSimilaritySummary"
+                        }
+                    },
+                    "500": {
+                        "description": "error interno",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "consumes": [
@@ -586,6 +778,49 @@
                 }
             }
         },
+        "models.AdminPendingSimilarities": {
+            "type": "object",
+            "properties": {
+                "minRatings": {
+                    "type": "integer"
+                },
+                "withoutIdx": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.PendingMovieWithoutIdx"
+                    }
+                },
+                "withoutSimilarities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.PendingMovieWithoutSims"
+                    }
+                }
+            }
+        },
+        "models.AdminSimilaritySummary": {
+            "type": "object",
+            "properties": {
+                "minRatings": {
+                    "type": "integer"
+                },
+                "moviesWithIdx": {
+                    "type": "integer"
+                },
+                "moviesWithSimilarities": {
+                    "type": "integer"
+                },
+                "moviesWithoutIdx": {
+                    "type": "integer"
+                },
+                "moviesWithoutSimilarities": {
+                    "type": "integer"
+                },
+                "totalMovies": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.CastMember": {
             "type": "object",
             "properties": {
@@ -704,6 +939,37 @@
                 }
             }
         },
+        "models.PendingMovieWithoutIdx": {
+            "type": "object",
+            "properties": {
+                "movieId": {
+                    "type": "integer"
+                },
+                "ratingsCount": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PendingMovieWithoutSims": {
+            "type": "object",
+            "properties": {
+                "iIdx": {
+                    "type": "integer"
+                },
+                "movieId": {
+                    "type": "integer"
+                },
+                "ratingsCount": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "models.RatingStats": {
             "type": "object",
             "properties": {
@@ -718,6 +984,49 @@
                 }
             }
         },
+        "models.RebuildSimilaritiesRequest": {
+            "type": "object",
+            "properties": {
+                "batchSize": {
+                    "type": "integer"
+                },
+                "k": {
+                    "type": "integer"
+                },
+                "minCommonUsers": {
+                    "type": "integer"
+                },
+                "minRatings": {
+                    "type": "integer"
+                },
+                "parallelism": {
+                    "type": "integer"
+                },
+                "shrink": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.RebuildSimilaritiesResult": {
+            "type": "object",
+            "properties": {
+                "batches": {
+                    "type": "integer"
+                },
+                "k": {
+                    "type": "integer"
+                },
+                "minCommonUsers": {
+                    "type": "integer"
+                },
+                "processedMovies": {
+                    "type": "integer"
+                },
+                "shrink": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.RecItem": {
             "type": "object",
             "properties": {
@@ -726,6 +1035,31 @@
                 },
                 "score": {
                     "type": "number"
+                }
+            }
+        },
+        "models.RemapMissingRequest": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "minRatings": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.RemapMissingResult": {
+            "type": "object",
+            "properties": {
+                "fromIdx": {
+                    "type": "integer"
+                },
+                "mappedCount": {
+                    "type": "integer"
+                },
+                "toIdx": {
+                    "type": "integer"
                 }
             }
         }

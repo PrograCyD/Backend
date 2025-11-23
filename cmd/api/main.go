@@ -71,12 +71,15 @@ func main() {
 	ratingSvc := service.NewRatingService(ratingRepo)
 	// coordinador que habla con los nodos ML + guarda historial + explicaciones
 	recSvc := service.NewRecommendService(ratingRepo, recRepo, simRepo, mlNodes)
+	// servicio de mantenimiento admin
+	adminMaintSvc := service.NewAdminMaintenanceService(cfg, mlNodes)
 
 	// handlers
 	authH := handler.NewAuthHandler(authSvc)
 	movieH := handler.NewMovieHandler(movieSvc)
 	ratingH := handler.NewRatingHandler(ratingSvc)
 	recH := handler.NewRecommendHandler(recSvc)
+	adminMaintH := handler.NewAdminMaintenanceHandler(adminMaintSvc)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -93,6 +96,7 @@ func main() {
 	// Películas (públicas)
 	r.Get("/movies/{id}", movieH.GetMovie)
 	r.Get("/movies/search", movieH.Search)
+	r.Get("/movies/top", movieH.Top)
 
 	// ===========================
 	// Rutas protegidas con JWT
@@ -127,6 +131,9 @@ func main() {
 				// WebSocket
 				r.Get("/ws/recommendations", recH.GetRecommendationsWS)
 			})
+
+			// --- mantenimiento de similitudes / mapeos ---
+			handler.MountAdminMaintenanceRoutes(r, adminMaintH)
 		})
 	})
 
