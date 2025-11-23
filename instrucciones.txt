@@ -1,7 +1,22 @@
 0. Inicializar proyecto
 Conectarse desde Mongo Compass
-mongodb://root:example@localhost:27017
-Subir las colecciones a la bd pc4_movies
+#mongodb://root:example@localhost:27017
+0. Inicializar proyecto
+
+0.1 Verificar Mongo
+- Asegúrate de NO tener un Mongo local de Windows escuchando en 27017.
+  - En PowerShell (como admin):  Get-Service *mongo*
+  - Si sale "MongoDB Server (MongoDB)", detenerlo:
+      Stop-Service MongoDB -Force
+  - (Opcional) Deshabilitarlo para que no se vuelva a prender:
+      Set-Service MongoDB -StartupType Disabled
+
+0.2 Conectarse desde MongoDB Compass
+- Connection String:
+    mongodb://root:example@localhost:27017/?authSource=admin
+- Database: pc4_movies
+
+0.3 Subir las colecciones a la bd pc4_movies
 - movies
 - ratings
 - users
