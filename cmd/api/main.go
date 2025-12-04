@@ -70,7 +70,7 @@ func main() {
 	authSvc := service.NewAuthService(userRepo, cfg.JWTSecret)
 	movieSvc := service.NewMovieService(movieRepo, cfg.TMDBAPIKey)
 	movieReqSvc := service.NewMovieRequestService(movieReqRepo, movieRepo, movieSvc)
-	ratingSvc := service.NewRatingService(ratingRepo)
+	ratingSvc := service.NewRatingService(ratingRepo, movieRepo)
 	// coordinador que habla con los nodos ML + guarda historial + explicaciones
 	recSvc := service.NewRecommendService(ratingRepo, recRepo, simRepo, mlNodes)
 	// servicio de mantenimiento admin

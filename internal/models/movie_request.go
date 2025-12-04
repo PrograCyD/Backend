@@ -13,18 +13,14 @@ type MovieCreateRequest struct {
 	Genres []string `json:"genres,omitempty"`
 
 	// ExternalData
-	Overview  string       `json:"overview,omitempty"`  // mapea a ExternalData.Overview
-	Runtime   int          `json:"runtime,omitempty"`   // ExternalData.Runtime
-	Director  string       `json:"director,omitempty"`  // ExternalData.Director
-	Cast      []CastMember `json:"cast,omitempty"`      // ExternalData.Cast
-	PosterURL string       `json:"posterUrl,omitempty"` // ExternalData.PosterURL
-
-	// Links
-	Links *Links `json:"links,omitempty"`
-
-	// Tags opcionales, que podemos inferir o dejar vacíos
-	UserTags   []string    `json:"userTags,omitempty"`
-	GenomeTags []GenomeTag `json:"genomeTags,omitempty"`
+	Overview   string       `json:"overview,omitempty"`  // mapea a ExternalData.Overview
+	Runtime    int          `json:"runtime,omitempty"`   // ExternalData.Runtime
+	Director   string       `json:"director,omitempty"`  // ExternalData.Director
+	Cast       []CastMember `json:"cast,omitempty"`      // ExternalData.Cast
+	PosterURL  string       `json:"posterUrl,omitempty"` // ExternalData.PosterURL
+	Links      *Links       `json:"links,omitempty"`
+	UserTags   []string     `json:"userTags,omitempty"`
+	GenomeTags []GenomeTag  `json:"genomeTags,omitempty"`
 }
 
 // Payload para actualización parcial de película

@@ -104,3 +104,19 @@ func (r *RatingRepository) GetByUser(ctx context.Context, userID, limit, offset 
 func (r *RatingRepository) GetAllByUser(ctx context.Context, userID int) ([]models.RatingDoc, error) {
 	return r.GetByUser(ctx, userID, 10000, 0)
 }
+
+func (r *RatingRepository) GetOne(ctx context.Context, userID, movieID int) (*models.RatingDoc, error) {
+	var rd models.RatingDoc
+	err := r.col.FindOne(ctx, bson.M{
+		"userId":  userID,
+		"movieId": movieID,
+	}).Decode(&rd)
+
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &rd, nil
+}

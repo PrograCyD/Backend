@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func Load() *Config {
-	_ = godotenv.Load() // si no existe .env, no pasa nada
+	_ = godotenv.Load()
 
 	return &Config{
 		MongoURI:   getEnv("MONGO_URI", "mongodb://root:example@localhost:27017"),
