@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -88,6 +89,30 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	// CORS para permitir llamadas desde Angular (localhost:4200)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{
+			"http://localhost:4200",
+			"http://127.0.0.1:4200",
+		},
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // 5 minutos
+	}))
+
 	// =============
 	// Rutas públicas
 	// =============
@@ -95,6 +120,8 @@ func main() {
 
 	r.Post("/auth/register", authH.Register)
 	r.Post("/auth/login", authH.Login)
+	// edición de usuario
+	r.Put("/users/{id}/update", authH.UpdateUser)
 
 	// Películas (públicas)
 	r.Get("/movies/tmdb", movieH.FetchFromTMDB)
@@ -125,9 +152,6 @@ func main() {
 		// ---- Endpoints solo ADMIN ----
 		r.Group(func(r chi.Router) {
 			r.Use(handler.AdminOnly())
-
-			// edición de usuario
-			r.Put("/users/{id}/update", authH.UpdateUser)
 
 			// gestión de películas
 			r.Post("/admin/movies", movieH.CreateMovie)
