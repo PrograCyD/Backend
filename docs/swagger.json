@@ -201,6 +201,226 @@
                 }
             }
         },
+        "/admin/movie-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie-requests"
+                ],
+                "summary": "Listar requests de películas (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pending|approved|rejected|all (default: pending)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "límite (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MovieRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movie-requests/{id}/approve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie-requests"
+                ],
+                "summary": "Aprobar request de película",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "movieRequestId (ObjectID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Override opcional de datos",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movie-requests/{id}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie-requests"
+                ],
+                "summary": "Rechazar request de película",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "movieRequestId (ObjectID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Motivo de rechazo",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RejectMovieRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieRequest"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "Crear nueva película",
+                "parameters": [
+                    {
+                        "description": "Datos de la película",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieDoc"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "Actualizar película existente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movieId",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Campos a actualizar",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieDoc"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "consumes": [
@@ -288,6 +508,89 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/me/movie-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie-requests"
+                ],
+                "summary": "Listar mis requests de película",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pending|approved|rejected|all (default: pending)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "límite (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MovieRequest"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie-requests"
+                ],
+                "summary": "Crear request de nueva película",
+                "parameters": [
+                    {
+                        "description": "Datos propuestos de película",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieRequest"
+                        }
                     }
                 }
             }
@@ -435,6 +738,74 @@
                             "items": {
                                 "$ref": "#/definitions/models.MovieDoc"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/tmdb": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "Obtener datos de película desde TMDB (para prellenar formulario)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de TMDB, por ejemplo 603",
+                        "name": "tmdbId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ExternalData"
+                        }
+                    },
+                    "400": {
+                        "description": "tmdbId requerido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/tmdb-prefill": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "Prefill de película completo desde TMDB (para formulario de alta)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de TMDB, por ejemplo 603",
+                        "name": "tmdbId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieCreateRequest"
+                        }
+                    },
+                    "400": {
+                        "description": "tmdbId requerido",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -889,6 +1260,68 @@
                 }
             }
         },
+        "models.MovieCreateRequest": {
+            "type": "object",
+            "properties": {
+                "cast": {
+                    "description": "ExternalData.Cast",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CastMember"
+                    }
+                },
+                "director": {
+                    "description": "ExternalData.Director",
+                    "type": "string"
+                },
+                "genomeTags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GenomeTag"
+                    }
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "links": {
+                    "description": "Links",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Links"
+                        }
+                    ]
+                },
+                "overview": {
+                    "description": "ExternalData",
+                    "type": "string"
+                },
+                "posterUrl": {
+                    "description": "ExternalData.PosterURL",
+                    "type": "string"
+                },
+                "runtime": {
+                    "description": "ExternalData.Runtime",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "obligatorio",
+                    "type": "string"
+                },
+                "userTags": {
+                    "description": "Tags opcionales, que podemos inferir o dejar vacíos",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.MovieDoc": {
             "type": "object",
             "properties": {
@@ -926,6 +1359,86 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                },
+                "userTags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.MovieRequest": {
+            "type": "object",
+            "properties": {
+                "approvedMovieId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "movie": {
+                    "$ref": "#/definitions/models.MovieCreateRequest"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending|approved|rejected",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.MovieUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "cast": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CastMember"
+                    }
+                },
+                "director": {
+                    "type": "string"
+                },
+                "genomeTags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GenomeTag"
+                    }
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "links": {
+                    "$ref": "#/definitions/models.Links"
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterUrl": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "integer"
+                },
+                "title": {
                     "type": "string"
                 },
                 "userTags": {
@@ -1035,6 +1548,14 @@
                 },
                 "score": {
                     "type": "number"
+                }
+            }
+        },
+        "models.RejectMovieRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
                 }
             }
         },

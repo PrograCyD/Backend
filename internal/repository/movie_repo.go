@@ -20,6 +20,35 @@ func NewMovieRepository() *MovieRepository {
 	return &MovieRepository{col: db.DB().Collection("movies")}
 }
 
+// NextMovieID obtiene el siguiente movieId disponible (max + 1).
+func (r *MovieRepository) NextMovieID(ctx context.Context) (int, error) {
+	opts := options.FindOne().
+		SetSort(bson.D{{Key: "movieId", Value: -1}}).
+		SetProjection(bson.M{"movieId": 1})
+
+	var m models.MovieDoc
+	err := r.col.FindOne(ctx, bson.M{}, opts).Decode(&m)
+	if err == mongo.ErrNoDocuments {
+		return 1, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	return m.MovieID + 1, nil
+}
+
+// Insert inserta una nueva película.
+func (r *MovieRepository) Insert(ctx context.Context, m *models.MovieDoc) error {
+	_, err := r.col.InsertOne(ctx, m)
+	return err
+}
+
+// Update reemplaza el documento completo de una película.
+func (r *MovieRepository) Update(ctx context.Context, m *models.MovieDoc) error {
+	_, err := r.col.ReplaceOne(ctx, bson.M{"movieId": m.MovieID}, m)
+	return err
+}
+
 func (r *MovieRepository) GetByID(ctx context.Context, movieID int) (*models.MovieDoc, error) {
 	var m models.MovieDoc
 	err := r.col.FindOne(ctx, bson.M{"movieId": movieID}).Decode(&m)
@@ -104,4 +133,22 @@ func (r *MovieRepository) Top(ctx context.Context, metric string, limit int) ([]
 		out = append(out, m)
 	}
 	return out, cur.Err()
+}
+
+// ExistsByTitleYear indica si ya existe una película con ese título y año.
+// Si year es nil, solo valida por título.
+func (r *MovieRepository) ExistsByTitleYear(ctx context.Context, title string, year *int) (bool, error) {
+	filter := bson.M{
+		"title": title,
+	}
+	if year != nil {
+		filter["year"] = *year
+	}
+
+	// usamos CountDocuments porque es simple y suficiente
+	n, err := r.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }

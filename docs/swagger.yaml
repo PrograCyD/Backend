@@ -104,6 +104,48 @@ definitions:
       tmdb:
         type: string
     type: object
+  models.MovieCreateRequest:
+    properties:
+      cast:
+        description: ExternalData.Cast
+        items:
+          $ref: '#/definitions/models.CastMember'
+        type: array
+      director:
+        description: ExternalData.Director
+        type: string
+      genomeTags:
+        items:
+          $ref: '#/definitions/models.GenomeTag'
+        type: array
+      genres:
+        items:
+          type: string
+        type: array
+      links:
+        allOf:
+        - $ref: '#/definitions/models.Links'
+        description: Links
+      overview:
+        description: ExternalData
+        type: string
+      posterUrl:
+        description: ExternalData.PosterURL
+        type: string
+      runtime:
+        description: ExternalData.Runtime
+        type: integer
+      title:
+        description: obligatorio
+        type: string
+      userTags:
+        description: Tags opcionales, que podemos inferir o dejar vacíos
+        items:
+          type: string
+        type: array
+      year:
+        type: integer
+    type: object
   models.MovieDoc:
     properties:
       createdAt:
@@ -129,6 +171,59 @@ definitions:
       title:
         type: string
       updatedAt:
+        type: string
+      userTags:
+        items:
+          type: string
+        type: array
+      year:
+        type: integer
+    type: object
+  models.MovieRequest:
+    properties:
+      approvedMovieId:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: string
+      movie:
+        $ref: '#/definitions/models.MovieCreateRequest'
+      reason:
+        type: string
+      status:
+        description: pending|approved|rejected
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+    type: object
+  models.MovieUpdateRequest:
+    properties:
+      cast:
+        items:
+          $ref: '#/definitions/models.CastMember'
+        type: array
+      director:
+        type: string
+      genomeTags:
+        items:
+          $ref: '#/definitions/models.GenomeTag'
+        type: array
+      genres:
+        items:
+          type: string
+        type: array
+      links:
+        $ref: '#/definitions/models.Links'
+      overview:
+        type: string
+      posterUrl:
+        type: string
+      runtime:
+        type: integer
+      title:
         type: string
       userTags:
         items:
@@ -200,6 +295,11 @@ definitions:
         type: integer
       score:
         type: number
+    type: object
+  models.RejectMovieRequest:
+    properties:
+      reason:
+        type: string
     type: object
   models.RemapMissingRequest:
     properties:
@@ -348,6 +448,142 @@ paths:
       summary: Resumen de estado de similitudes
       tags:
       - admin-maintenance
+  /admin/movie-requests:
+    get:
+      parameters:
+      - description: 'pending|approved|rejected|all (default: pending)'
+        in: query
+        name: status
+        type: string
+      - description: 'límite (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MovieRequest'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Listar requests de películas (admin)
+      tags:
+      - movie-requests
+  /admin/movie-requests/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: movieRequestId (ObjectID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Override opcional de datos
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/models.MovieCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Aprobar request de película
+      tags:
+      - movie-requests
+  /admin/movie-requests/{id}/reject:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: movieRequestId (ObjectID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Motivo de rechazo
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RejectMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieRequest'
+      security:
+      - BearerAuth: []
+      summary: Rechazar request de película
+      tags:
+      - movie-requests
+  /admin/movies:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Datos de la película
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.MovieCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.MovieDoc'
+      security:
+      - BearerAuth: []
+      summary: Crear nueva película
+      tags:
+      - movies
+  /admin/movies/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: movieId
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Campos a actualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.MovieUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieDoc'
+      security:
+      - BearerAuth: []
+      summary: Actualizar película existente
+      tags:
+      - movies
   /auth/login:
     post:
       consumes:
@@ -407,6 +643,57 @@ paths:
       summary: Healthcheck
       tags:
       - health
+  /me/movie-requests:
+    get:
+      parameters:
+      - description: 'pending|approved|rejected|all (default: pending)'
+        in: query
+        name: status
+        type: string
+      - description: 'límite (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MovieRequest'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Listar mis requests de película
+      tags:
+      - movie-requests
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Datos propuestos de película
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.MovieCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.MovieRequest'
+      security:
+      - BearerAuth: []
+      summary: Crear request de nueva película
+      tags:
+      - movie-requests
   /me/ratings:
     get:
       produces:
@@ -515,6 +802,50 @@ paths:
               $ref: '#/definitions/models.MovieDoc'
             type: array
       summary: Buscar / listar películas (paginado)
+      tags:
+      - movies
+  /movies/tmdb:
+    get:
+      parameters:
+      - description: ID de TMDB, por ejemplo 603
+        in: query
+        name: tmdbId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ExternalData'
+        "400":
+          description: tmdbId requerido
+          schema:
+            type: string
+      summary: Obtener datos de película desde TMDB (para prellenar formulario)
+      tags:
+      - movies
+  /movies/tmdb-prefill:
+    get:
+      parameters:
+      - description: ID de TMDB, por ejemplo 603
+        in: query
+        name: tmdbId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieCreateRequest'
+        "400":
+          description: tmdbId requerido
+          schema:
+            type: string
+      summary: Prefill de película completo desde TMDB (para formulario de alta)
       tags:
       - movies
   /movies/top:

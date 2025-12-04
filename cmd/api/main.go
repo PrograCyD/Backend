@@ -38,6 +38,7 @@ func main() {
 	// repos
 	userRepo := repository.NewUserRepository()
 	movieRepo := repository.NewMovieRepository()
+	movieReqRepo := repository.NewMovieRequestRepository()
 	ratingRepo := repository.NewRatingRepository()
 	recRepo := repository.NewRecommendationRepository()
 	simRepo := repository.NewSimilarityRepository()
@@ -67,7 +68,8 @@ func main() {
 
 	// services
 	authSvc := service.NewAuthService(userRepo, cfg.JWTSecret)
-	movieSvc := service.NewMovieService(movieRepo)
+	movieSvc := service.NewMovieService(movieRepo, cfg.TMDBAPIKey)
+	movieReqSvc := service.NewMovieRequestService(movieReqRepo, movieRepo, movieSvc)
 	ratingSvc := service.NewRatingService(ratingRepo)
 	// coordinador que habla con los nodos ML + guarda historial + explicaciones
 	recSvc := service.NewRecommendService(ratingRepo, recRepo, simRepo, mlNodes)
@@ -77,6 +79,7 @@ func main() {
 	// handlers
 	authH := handler.NewAuthHandler(authSvc)
 	movieH := handler.NewMovieHandler(movieSvc)
+	movieReqH := handler.NewMovieRequestHandler(movieReqSvc)
 	ratingH := handler.NewRatingHandler(ratingSvc)
 	recH := handler.NewRecommendHandler(recSvc)
 	adminMaintH := handler.NewAdminMaintenanceHandler(adminMaintSvc)
@@ -94,6 +97,8 @@ func main() {
 	r.Post("/auth/login", authH.Login)
 
 	// Películas (públicas)
+	r.Get("/movies/tmdb", movieH.FetchFromTMDB)
+	r.Get("/movies/tmdb-prefill", movieH.PrefillMovieFromTMDB)
 	r.Get("/movies/{id}", movieH.GetMovie)
 	r.Get("/movies/search", movieH.Search)
 	r.Get("/movies/top", movieH.Top)
@@ -111,6 +116,10 @@ func main() {
 			r.Get("/ratings", ratingH.GetMyRatings)
 			r.Post("/ratings", ratingH.PostMyRating)
 			r.Get("/recommendations", recH.GetMyRecommendations)
+
+			// movie requests (USER)
+			r.Get("/movie-requests", movieReqH.ListMine)
+			r.Post("/movie-requests", movieReqH.Create)
 		})
 
 		// ---- Endpoints solo ADMIN ----
@@ -119,6 +128,10 @@ func main() {
 
 			// edición de usuario
 			r.Put("/users/{id}/update", authH.UpdateUser)
+
+			// gestión de películas
+			r.Post("/admin/movies", movieH.CreateMovie)
+			r.Put("/admin/movies/{id}", movieH.UpdateMovie)
 
 			// ratings y recomendaciones de cualquier usuario
 			r.Route("/users/{id}", func(r chi.Router) {
@@ -131,6 +144,11 @@ func main() {
 				// WebSocket
 				r.Get("/ws/recommendations", recH.GetRecommendationsWS)
 			})
+
+			// movie-requests (ADMIN)
+			r.Get("/admin/movie-requests", movieReqH.ListAll)
+			r.Post("/admin/movie-requests/{id}/approve", movieReqH.Approve)
+			r.Post("/admin/movie-requests/{id}/reject", movieReqH.Reject)
 
 			// --- mantenimiento de similitudes / mapeos ---
 			handler.MountAdminMaintenanceRoutes(r, adminMaintH)

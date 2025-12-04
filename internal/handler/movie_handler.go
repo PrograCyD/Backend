@@ -3,9 +3,11 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
+	"nodosml-pc4/internal/models"
 	"nodosml-pc4/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -95,4 +97,118 @@ func (h *MovieHandler) Top(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(w).Encode(movies)
+}
+
+// ====== ADMIN: crear / actualizar películas ======
+
+// @Summary Crear nueva película
+// @Tags movies
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body models.MovieCreateRequest true "Datos de la película"
+// @Success 201 {object} models.MovieDoc
+// @Router /admin/movies [post]
+func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req models.MovieCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
+		http.Error(w, "body inválido (title requerido)", http.StatusBadRequest)
+		return
+	}
+
+	movie, err := h.svc.CreateMovie(r.Context(), &req)
+	if err != nil {
+		if errors.Is(err, service.ErrMovieAlreadyExists) {
+			http.Error(w, "ya existe una película con ese título y año", http.StatusConflict)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(movie)
+}
+
+// @Summary Actualizar película existente
+// @Tags movies
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "movieId"
+// @Param body body models.MovieUpdateRequest true "Campos a actualizar"
+// @Success 200 {object} models.MovieDoc
+// @Router /admin/movies/{id} [put]
+func (h *MovieHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+	var req models.MovieUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+
+	movie, err := h.svc.UpdateMovie(r.Context(), id, &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if movie == nil {
+		http.NotFound(w, r)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(movie)
+}
+
+// @Summary Obtener datos de película desde TMDB (para prellenar formulario)
+// @Tags movies
+// @Produce json
+// @Param tmdbId query string true "ID de TMDB, por ejemplo 603"
+// @Success 200 {object} models.ExternalData
+// @Failure 400 {string} string "tmdbId requerido"
+// @Router /movies/tmdb [get]
+func (h *MovieHandler) FetchFromTMDB(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	tmdbID := r.URL.Query().Get("tmdbId")
+	if tmdbID == "" {
+		http.Error(w, "tmdbId es requerido", http.StatusBadRequest)
+		return
+	}
+
+	ext, err := h.svc.FetchExternalFromTMDB(r.Context(), tmdbID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(ext)
+}
+
+// @Summary Prefill de película completo desde TMDB (para formulario de alta)
+// @Tags movies
+// @Produce json
+// @Param tmdbId query string true "ID de TMDB, por ejemplo 603"
+// @Success 200 {object} models.MovieCreateRequest
+// @Failure 400 {string} string "tmdbId requerido"
+// @Router /movies/tmdb-prefill [get]
+func (h *MovieHandler) PrefillMovieFromTMDB(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	tmdbID := r.URL.Query().Get("tmdbId")
+	if tmdbID == "" {
+		http.Error(w, "tmdbId es requerido", http.StatusBadRequest)
+		return
+	}
+
+	req, err := h.svc.PrefillCreateFromTMDB(r.Context(), tmdbID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(req)
 }
