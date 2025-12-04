@@ -132,9 +132,13 @@ func main() {
 			// gestión de películas
 			r.Post("/admin/movies", movieH.CreateMovie)
 			r.Put("/admin/movies/{id}", movieH.UpdateMovie)
+			r.Get("/users", authH.ListUsers)
 
 			// ratings y recomendaciones de cualquier usuario
 			r.Route("/users/{id}", func(r chi.Router) {
+				// obtener info del usuario por id
+				r.Get("/", authH.GetUserByID)
+
 				r.Get("/ratings", ratingH.GetRatings)
 				r.Post("/ratings", ratingH.PostRating)
 

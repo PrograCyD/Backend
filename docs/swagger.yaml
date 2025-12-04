@@ -16,20 +16,71 @@ definitions:
     type: object
   handler.registerRequest:
     properties:
+      about:
+        type: string
       email:
+        type: string
+      firstName:
+        type: string
+      lastName:
         type: string
       password:
         type: string
+      preferredGenres:
+        items:
+          type: string
+        type: array
       role:
+        type: string
+      username:
         type: string
     type: object
   handler.updateUserRequest:
     properties:
+      about:
+        type: string
       email:
+        type: string
+      firstName:
+        type: string
+      lastName:
         type: string
       password:
         type: string
+      preferredGenres:
+        items:
+          type: string
+        type: array
       role:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.userResponse:
+    properties:
+      about:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      preferredGenres:
+        items:
+          type: string
+        type: array
+      role:
+        type: string
+      uIdx:
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+      username:
         type: string
     type: object
   models.AdminPendingSimilarities:
@@ -123,9 +174,7 @@ definitions:
           type: string
         type: array
       links:
-        allOf:
-        - $ref: '#/definitions/models.Links'
-        description: Links
+        $ref: '#/definitions/models.Links'
       overview:
         description: ExternalData
         type: string
@@ -139,7 +188,6 @@ definitions:
         description: obligatorio
         type: string
       userTags:
-        description: Tags opcionales, que podemos inferir o dejar vacíos
         items:
           type: string
         type: array
@@ -871,6 +919,59 @@ paths:
       summary: Top películas (popularidad o rating)
       tags:
       - movies
+  /users:
+    get:
+      parameters:
+      - description: 'user|admin|all (default: all)'
+        in: query
+        name: role
+        type: string
+      - description: búsqueda por email/username/nombre
+        in: query
+        name: q
+        type: string
+      - description: 'límite (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.userResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Listar usuarios (ADMIN)
+      tags:
+      - users
+  /users/{id}:
+    get:
+      parameters:
+      - description: userId
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.userResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener usuario por id (ADMIN)
+      tags:
+      - users
   /users/{id}/ratings:
     get:
       parameters:

@@ -881,6 +881,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Listar usuarios (ADMIN)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user|admin|all (default: all)",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "búsqueda por email/username/nombre",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "límite (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.userResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Obtener usuario por id (ADMIN)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "userId",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.userResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/ratings": {
             "get": {
                 "security": [
@@ -1130,13 +1216,31 @@ const docTemplate = `{
         "handler.registerRequest": {
             "type": "object",
             "properties": {
+                "about": {
+                    "type": "string"
+                },
                 "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
+                "preferredGenres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1144,13 +1248,72 @@ const docTemplate = `{
         "handler.updateUserRequest": {
             "type": "object",
             "properties": {
+                "about": {
+                    "type": "string"
+                },
                 "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
+                "preferredGenres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.userResponse": {
+            "type": "object",
+            "properties": {
+                "about": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "preferredGenres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                },
+                "uIdx": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1293,12 +1456,7 @@ const docTemplate = `{
                     }
                 },
                 "links": {
-                    "description": "Links",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Links"
-                        }
-                    ]
+                    "$ref": "#/definitions/models.Links"
                 },
                 "overview": {
                     "description": "ExternalData",
@@ -1317,7 +1475,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userTags": {
-                    "description": "Tags opcionales, que podemos inferir o dejar vacíos",
                     "type": "array",
                     "items": {
                         "type": "string"

@@ -17,6 +17,31 @@ type AuthService struct {
 	jwtSecret []byte
 }
 
+type RegisterUserData struct {
+	Email    string
+	Password string
+	Role     string
+
+	FirstName string
+	LastName  string
+	Username  string
+	About     string
+
+	PreferredGenres []string
+}
+
+type UpdateUserData struct {
+	Email    *string
+	Role     *string
+	Password *string
+
+	FirstName       *string
+	LastName        *string
+	Username        *string
+	About           *string
+	PreferredGenres *[]string
+}
+
 func NewAuthService(users *repository.UserRepository, secret string) *AuthService {
 	return &AuthService{users: users, jwtSecret: []byte(secret)}
 }
@@ -24,8 +49,9 @@ func NewAuthService(users *repository.UserRepository, secret string) *AuthServic
 // ================== REGISTER & LOGIN ==================
 
 // Register crea un usuario nuevo. El role viene del body, pero solo se permite "user" o "admin".
-func (s *AuthService) Register(ctx context.Context, email, password, role string) (*models.UserDoc, error) {
-	existing, err := s.users.FindByEmail(ctx, email)
+// Register crea un usuario nuevo.
+func (s *AuthService) Register(ctx context.Context, data RegisterUserData) (*models.UserDoc, error) {
+	existing, err := s.users.FindByEmail(ctx, data.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +64,17 @@ func (s *AuthService) Register(ctx context.Context, email, password, role string
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	nextUIdx, err := s.users.GetNextUIdx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// normalizar role
+	hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	role := data.Role
 	if role == "" {
 		role = "user"
 	}
@@ -51,12 +82,22 @@ func (s *AuthService) Register(ctx context.Context, email, password, role string
 		return nil, fmt.Errorf("invalid role (must be user|admin)")
 	}
 
+	now := time.Now().UTC().Format(time.RFC3339)
+
 	u := &models.UserDoc{
 		UserID:       nextID,
-		Email:        email,
+		UIdx:         nextUIdx,
+		Email:        data.Email,
 		PasswordHash: string(hash),
 		Role:         role,
-		CreatedAt:    time.Now().UTC().Format(time.RFC3339),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+
+		FirstName:       data.FirstName,
+		LastName:        data.LastName,
+		Username:        data.Username,
+		About:           data.About,
+		PreferredGenres: data.PreferredGenres,
 	}
 
 	if err := s.users.Insert(ctx, u); err != nil {
@@ -92,15 +133,8 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 
 // ================== UPDATE USER ==================
 
-type UpdateUserData struct {
-	Email    *string
-	Role     *string
-	Password *string
-}
-
 // UpdateUser actualiza campos opcionales de un usuario.
 func (s *AuthService) UpdateUser(ctx context.Context, userID int, data UpdateUserData) error {
-	// Verificar que el usuario exista
 	u, err := s.users.FindByID(ctx, userID)
 	if err != nil {
 		return err
@@ -116,7 +150,6 @@ func (s *AuthService) UpdateUser(ctx context.Context, userID int, data UpdateUse
 		if *data.Email == "" {
 			return fmt.Errorf("email cannot be empty")
 		}
-		// Revisar que no esté usado por otro usuario
 		existing, err := s.users.FindByEmail(ctx, *data.Email)
 		if err != nil {
 			return err
@@ -147,9 +180,36 @@ func (s *AuthService) UpdateUser(ctx context.Context, userID int, data UpdateUse
 		update["passwordHash"] = string(hash)
 	}
 
+	// Campos de perfil
+	if data.FirstName != nil {
+		update["firstName"] = *data.FirstName
+	}
+	if data.LastName != nil {
+		update["lastName"] = *data.LastName
+	}
+	if data.Username != nil {
+		update["username"] = *data.Username
+	}
+	if data.About != nil {
+		update["about"] = *data.About
+	}
+	if data.PreferredGenres != nil {
+		update["preferredGenres"] = *data.PreferredGenres
+	}
+
 	if len(update) == 0 {
 		return fmt.Errorf("no fields to update")
 	}
 
+	update["updatedAt"] = time.Now().UTC().Format(time.RFC3339)
+
 	return s.users.UpdateByID(ctx, userID, update)
+}
+
+func (s *AuthService) ListUsers(ctx context.Context, role, q string, limit, offset int) ([]models.UserDoc, error) {
+	return s.users.Search(ctx, role, q, limit, offset)
+}
+
+func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*models.UserDoc, error) {
+	return s.users.FindByID(ctx, userID)
 }
